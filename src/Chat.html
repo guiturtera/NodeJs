@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chat</title>
+</head>
+<body>
+    <h1>Membros do chat:</h1>
+    <ul id="member-list"></ul>
+    <form id="main-form">
+        <input type="text" id="msg-content">
+        <button type="submit">Send</button>
+    </form>
+    <section>
+        <ul id="messages"></ul>
+    </section>
+    
+</body>
+<script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        var messages = document.getElementById('messages')
+        var form = document.getElementById('main-form')
+        var msg = document.getElementById('msg-content')
+        var memberList = document.getElementById('member-list')
+
+        form.addEventListener('load', () => {
+            console.log('loaded')
+        })
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+            if (msg.value) {
+                socket.emit('chat message', msg.value)
+                msg.value = ""
+            }
+        })
+
+        socket.on('chat message', (msg) => { addMessage(msg) })
+
+        socket.on('member joined', (member) => { addChatMember(member) })
+
+        socket.on('update chat', (msgsData) => { updateMessages(msgsData) });
+
+        socket.on('update members', (members) => { updateMembers(members) })
+
+        function addMessage(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function addChatMember(member){
+            console.log(member)
+            var item = document.createElement('li')
+            item.textContent = member
+            memberList.appendChild(item)
+        }
+        
+        function updateMessages(msgsData){
+            msgsData.forEach(x => {
+                addMessage(x)
+            });
+        }
+      
+        function updateMembers(members){
+            memberList.innerHTML = ""
+            for (const [key, value] of Object.entries(members)){
+                addChatMember(value)
+            }
+        }
+      </script>
+</html>
